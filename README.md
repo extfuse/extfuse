@@ -1,2 +1,2 @@
-# extfuse
-Extension Framework for FUSE
+# Extension Framework for FUSE
+Coming soon!

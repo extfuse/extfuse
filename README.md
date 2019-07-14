@@ -18,4 +18,16 @@ git clone --branch ExtFUSE-1.0 https://github.com/extfuse/libfuse
 
 * If you use this work for your research, we would deep appreciate a citation to our USENIX ATC '19 [Paper](https://www.usenix.org/system/files/atc19-bijlani.pdf)
 
-
+```
+@inproceedings {234870,
+author = {Ashish Bijlani and Umakishore Ramachandran},
+title = {Extension Framework for File Systems in User space},
+booktitle = {2019 {USENIX} Annual Technical Conference ({USENIX} {ATC} 19)},
+year = {2019},
+isbn = {978-1-939133-03-8},
+address = {Renton, WA},
+pages = {121--134},
+url = {https://www.usenix.org/conference/atc19/presentation/bijlani},
+publisher = {{USENIX} Association},
+}
+```

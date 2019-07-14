@@ -4,7 +4,12 @@
 
 We have modifed the FUSE driver to support ExtFUSE feature. Therefore, you will have to install and run a our modified kernel. To clone the kernel sources do:
 ```
-git clone --branch ExtFUSE-1.0 https://github.com/extfuse/linux 
+$ git clone --branch ExtFUSE-1.0 https://github.com/extfuse/linux 
+$ cd linux
+$ make menuconfig
+	Select 'File systems  ---> Extension framework for FUSE' and save/exit.
+$ make -j4
+$ sudo make install -j4
 ```
 
 You will also need a modified FUSE library. To clone its source repo:

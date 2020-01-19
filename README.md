@@ -1,7 +1,5 @@
 # Extension Framework for FUSE
 
-* LibExtFUSE code Coming soon!
-
 We have modifed the FUSE driver to support ExtFUSE feature. Therefore, you will have to install and run a our modified kernel. To clone the kernel sources do:
 ```
 $ git clone --branch ExtFUSE-1.0 https://github.com/extfuse/linux 
@@ -12,10 +10,21 @@ $ make -j4
 $ sudo make install -j4
 ```
 
-You will also need a modified FUSE library. To clone its source repo:
+Boot into the new kernel. Clone ExtFUSE library sources and build. You will need LLVM/Clang toolchain.
 ```
-git clone --branch ExtFUSE-1.0 https://github.com/extfuse/libfuse
+$ git clone https://github.com/extfuse/extfuse
+$ cd extfuse
+$ LLC=llc-3.8 CLANG=clang-3.8 make
 ```
+
+The eBPF code for handling FUSE requests in the kernel can be found in ```bpf/extfuse.c```.
+Once you build the library, compiled eBPF bytecode can be found in ```src/extfuse.o```.
+
+Finally, you will also need a modified FUSE library. To clone its source repo:
+```
+$ git clone --branch ExtFUSE-1.0 https://github.com/extfuse/libfuse
+```
+Follow instructions [here](https://github.com/libfuse/libfuse/blob/master/README.md) to build libfuse.
 
 * [Open Source Summit, 2018 Presentation](https://events.linuxfoundation.org/wp-content/uploads/2017/11/When-eBPF-Meets-FUSE-Improving-Performance-of-User-File-Systems-Ashish-Bijlani-Georgia-Tech.pdf)
 

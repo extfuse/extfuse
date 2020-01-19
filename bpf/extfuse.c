@@ -1,14 +1,9 @@
 /*
- * This module has the kernel code for FUSE XDP
+ * This module has the kernel code for ExtFUSE
  */
-#define KBUILD_MODNAME "fusexdp"
+#define KBUILD_MODNAME "extfuse"
 #include <uapi/linux/bpf.h>
 #include "bpf_helpers.h"
-
-//#include "ctrlmap.h"
-//#include "datamap.h"
-//#include "xdp_lib/dbg.h"
-//#include "xdp_lib/handlers.h"
 
 #include <linux/version.h>
 #include <linux/fs.h>
@@ -25,7 +20,7 @@
 
 //#define DEBUGNOW
 
-#define HAVE_PASSTHRU
+/* #define HAVE_PASSTHRU */
 
 #ifndef DEBUGNOW
 #define PRINTK(fmt, ...)
@@ -93,14 +88,6 @@ static int gen_entry_key(void *ctx, int param, const char *op, lookup_entry_key_
 		return ret;
 	}
 
-	/* for value at index @param, @param-1 contains the size of the value */
-	//u32 namelen;
-	//ret = bpf_fuse_read_args(ctx, IN_PARAM_0_SIZE, &namelen, sizeof(u32));
-	//if (ret) {
-	//	PRINTK("%s: Failed to read param %d size: %d!\n", op, param, ret);
-	//	return ret;
-	//}
-
 	ret = bpf_fuse_read_args(ctx, param, key->name, NAME_MAX);
 	if (ret < 0) {
 		PRINTK("%s: Failed to read param %d: %d!\n", op, param, ret);
@@ -147,7 +134,6 @@ static void create_lookup_entry(struct fuse_entry_out *out,
     	out->attr.atimensec		= attr->attr.atimensec;
     	out->attr.mtimensec		= attr->attr.mtimensec;
     	out->attr.ctimensec		= attr->attr.ctimensec;
-		//memcpy(&out->attr, &attr->attr, sizeof(attr->attr));
 	}
 }
 
@@ -157,7 +143,7 @@ HANDLER(FUSE_LOOKUP)(void *ctx)
 	//unsigned numargs = args->in.numargs;
 	int ret = UPCALL;
 
-#if 0//def DEBUGNOW
+#ifdef DEBUGNOW
 	u64 nid = args->in.h.nodeid;
 	const char *name = (const char *)args->in.args[0].value;
 	const unsigned int len = args->in.args[0].size - 1;
@@ -220,7 +206,7 @@ HANDLER(FUSE_LOOKUP)(void *ctx)
 		return UPCALL;
 	}
 
-	// atomic incr to avoid data races with user/other cpus
+	/* atomic incr to avoid data races with user/other cpus */
 	__sync_fetch_and_add(&entry->nlookup, 1);
 	return RETURN;
 }
@@ -355,28 +341,6 @@ HANDLER(FUSE_FLUSH)(void *ctx)
 	return RETURN;
 }
 
-#if 0
-// XXX can't use this because @name is not an arg
-HANDLER(FUSE_FORGET)(void *ctx)
-{
-	lookup_entry_key_t key = {0, {0}};
-	memset(key.name, 0, NAME_MAX);
-	if (gen_entry_key(ctx, IN_PARAM_0_VALUE, "FORGET", &key))
-		return UPCALL;
-
-	PRINTK("FORGET key name: %s nodeid: 0x%llx\n", key.name, key.nodeid);
-
-	lookup_entry_val_t *val = bpf_map_lookup_elem(&entry_map, &key);
-	if (val && !val->stale && val->nlookup > 1) {
-		__sync_fetch_and_add(&val->nlookup, -1);
-		PRINTK("FORGET (0x%llx, %s): nlookup %lld decr nlookup!\n",
-			key.nodeid, key.name, val->nlookup);
-	}
-
-	return UPCALL;
-}
-#endif
-
 #ifndef DEBUGNOW
 static int remove(void *ctx, int param, char *op, lookup_entry_key_t *key)
 {																			
@@ -429,12 +393,12 @@ HANDLER(FUSE_RENAME)(void *ctx)
 	if (gen_entry_key(ctx, IN_PARAM_1_VALUE, "RENAME", &key))
 		return UPCALL;
 
-	// lookup by key
+	/* lookup by key */
 	lookup_entry_val_t *entry = bpf_map_lookup_elem(&entry_map, &key);
 	if (!entry || entry->stale)
 		return UPCALL;
 
-	// mark as stale to prevent future lookups
+	/* mark as stale to prevent future lookups */
 	__sync_fetch_and_add(&entry->stale, 1);
 
 	PRINTK("RENAME key name: %s nodeid: 0x%llx nlookup %lld Marked Stale!\n",
@@ -460,12 +424,12 @@ HANDLER(FUSE_RENAME)(void *ctx)
 	if (gen_entry_key(ctx, IN_PARAM_2_VALUE, "RENAME", &key))
 		return UPCALL;
 
-	// lookup by key
+	/* lookup by key */
 	entry = bpf_map_lookup_elem(&entry_map, &key);
 	if (!entry || entry->stale)
 		return UPCALL;
 
-	// mark as stale to prevent future lookups
+	/* mark as stale to prevent future lookups */
 	__sync_fetch_and_add(&entry->stale, 1);
 
 	PRINTK("RENAME key name: %s nodeid: 0x%llx nlookup %lld Marked Stale!\n",
@@ -501,12 +465,12 @@ HANDLER(FUSE_RMDIR)(void *ctx)
 	if (gen_entry_key(ctx, IN_PARAM_0_VALUE, "RMDIR", &key))
 		return UPCALL;
 
-	// lookup by key
+	/* lookup by key */
 	lookup_entry_val_t *entry = bpf_map_lookup_elem(&entry_map, &key);
 	if (!entry || entry->stale)
 		return UPCALL;
 
-	// mark as stale to prevent future lookups
+	/* mark as stale to prevent future lookups */
 	__sync_fetch_and_add(&entry->stale, 1);
 
 	PRINTK("RMDIR key name: %s nodeid: 0x%llx nlookup %lld Marked Stale!\n",
@@ -542,12 +506,12 @@ HANDLER(FUSE_UNLINK)(void *ctx)
 	if (gen_entry_key(ctx, IN_PARAM_0_VALUE, "UNLINK", &key))
 		return UPCALL;
 
-	// lookup by key
+	/* lookup by key */
 	lookup_entry_val_t *entry = bpf_map_lookup_elem(&entry_map, &key);
 	if (!entry || entry->stale)
 		return UPCALL;
 
-	// mark as stale to prevent future lookups
+	/* mark as stale to prevent future lookups */
 	__sync_fetch_and_add(&entry->stale, 1);
 
 	PRINTK("UNLINK key name: %s nodeid: 0x%llx nlookup %lld Marked Stale!\n",

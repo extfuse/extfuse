@@ -26,6 +26,15 @@ $ git clone --branch ExtFUSE-1.0 https://github.com/extfuse/libfuse
 ```
 Follow instructions [here](https://github.com/libfuse/libfuse/blob/master/README.md) to build libfuse.
 
+You can test ExtFUSE functionality with a simple stackable FUSE file system [here](https://github.com/ashishbijlani/StackFS).
+```
+$ git clone https://github.com/ashishbijlani/StackFS
+$ cd StackFS
+$ make
+$ export LIB_PATH=$HOME/libfuse/lib/.libs:$HOME/extfuse
+$ sudo sh -c "LD_LIBRARY_PATH=$LIB_PATH ./StackFS_ll -o max_write=131072 -o writeback_cache -o splice_read -o splice_write -o splice_move -r $ROOT_DIR $MNT_DIR -o allow_other"
+```
+
 * [Open Source Summit, 2018 Presentation](https://events.linuxfoundation.org/wp-content/uploads/2017/11/When-eBPF-Meets-FUSE-Improving-Performance-of-User-File-Systems-Ashish-Bijlani-Georgia-Tech.pdf)
 
 * [LPC'18 Video](https://www.youtube.com/watch?v=XmoJCHNEp2w)

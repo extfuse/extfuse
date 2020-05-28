@@ -5,10 +5,15 @@ We have modifed the FUSE driver to support ExtFUSE feature. Therefore, you will 
 $ git clone --branch ExtFUSE-1.0 https://github.com/extfuse/linux 
 $ cd linux
 $ make menuconfig
-	Select 'File systems  ---> Extension framework for FUSE' and save/exit.
+--> General setup
+	[*] Enable bpf() system call
+--> File systems  
+	<*> FUSE (Filesystem in Userspace) support                                                                                                                                       
+	[*]   Extension framework for FUSE
 $ make -j4
 $ sudo make install -j4
 ```
+In menuconfig step, **DO NOT** select FUSE as a kernel module as it will cause the kernel compilation to fail; instead, build FUSE into the kernel.
 
 Boot into the new kernel. Clone ExtFUSE library sources and build. You will need LLVM/Clang toolchain.
 ```

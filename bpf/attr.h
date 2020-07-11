@@ -1,7 +1,7 @@
 #ifndef __EBPF_ATTR_H__
 #define __EBPF_ATTR_H__
 
-#include <fuse.h>
+#include <linux/fuse.h>
 
 typedef struct lookup_attr_key {
     /* node id */

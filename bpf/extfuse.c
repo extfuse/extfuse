@@ -66,7 +66,7 @@ struct bpf_map_def SEC("maps") handlers = {
 
 int SEC("fuse") fuse_xdp_main_handler(void *ctx)
 {
-    struct fuse_args *args = (struct fuse_args *)ctx;
+    struct extfuse_req *args = (struct extfuse_req *)ctx;
     int opcode = (int)args->in.h.opcode;
 
     PRINTK("Opcode %d\n", opcode);
@@ -82,13 +82,13 @@ int SEC("fuse") fuse_xdp_main_handler(void *ctx)
 
 static int gen_entry_key(void *ctx, int param, const char *op, lookup_entry_key_t *key)
 {
-	int64_t ret = bpf_fuse_read_args(ctx, NODEID, &key->nodeid, sizeof(u64));
+	int64_t ret = bpf_extfuse_read_args(ctx, NODEID, &key->nodeid, sizeof(u64));
 	if (ret < 0) {
 		PRINTK("%s: Failed to read nodeid: %d!\n", op, ret);
 		return ret;
 	}
 
-	ret = bpf_fuse_read_args(ctx, param, key->name, NAME_MAX);
+	ret = bpf_extfuse_read_args(ctx, param, key->name, NAME_MAX);
 	if (ret < 0) {
 		PRINTK("%s: Failed to read param %d: %d!\n", op, param, ret);
 		return ret;
@@ -99,7 +99,7 @@ static int gen_entry_key(void *ctx, int param, const char *op, lookup_entry_key_
 
 static int gen_attr_key(void *ctx, int param, const char *op, lookup_attr_key_t *key)
 {
-	int64_t ret = bpf_fuse_read_args(ctx, NODEID, &key->nodeid, sizeof(u64));
+	int64_t ret = bpf_extfuse_read_args(ctx, NODEID, &key->nodeid, sizeof(u64));
 	if (ret < 0) {
 		PRINTK("%s: Failed to read nodeid: %d!\n", op, ret);
 		return ret;
@@ -139,7 +139,7 @@ static void create_lookup_entry(struct fuse_entry_out *out,
 
 HANDLER(FUSE_LOOKUP)(void *ctx)
 {
-	struct fuse_args *args = (struct fuse_args *)ctx;
+	struct extfuse_req *args = (struct extfuse_req *)ctx;
 	//unsigned numargs = args->in.numargs;
 	int ret = UPCALL;
 
@@ -200,7 +200,7 @@ HANDLER(FUSE_LOOKUP)(void *ctx)
 	}
 
 	/* populate output */
-	ret = bpf_fuse_write_args(ctx, OUT_PARAM_0, &out, sizeof(out));
+	ret = bpf_extfuse_write_args(ctx, OUT_PARAM_0, &out, sizeof(out));
 	if (ret) {
 		PRINTK("LOOKUP: Failed to write param 0: %d!\n", ret);
 		return UPCALL;
@@ -229,7 +229,7 @@ HANDLER(FUSE_GETATTR)(void *ctx)
 	if (attr->stale) {
 		/* what does the caller want? */
 		struct fuse_getattr_in inarg;
-		ret = bpf_fuse_read_args(ctx, IN_PARAM_0_VALUE, &inarg, sizeof(inarg));
+		ret = bpf_extfuse_read_args(ctx, IN_PARAM_0_VALUE, &inarg, sizeof(inarg));
 		if (ret < 0) {
 			PRINTK("GETATTR: Failed to read param 0: %d!\n", ret);
 			return UPCALL;
@@ -246,7 +246,7 @@ HANDLER(FUSE_GETATTR)(void *ctx)
 	PRINTK("GETATTR(0x%llx): %lld\n", key.nodeid, attr->out.attr.ino);
 
 	/* populate output */
-	ret = bpf_fuse_write_args(ctx, OUT_PARAM_0, &attr->out, sizeof(attr->out));
+	ret = bpf_extfuse_write_args(ctx, OUT_PARAM_0, &attr->out, sizeof(attr->out));
 	if (ret) {
 		PRINTK("GETATTR: Failed to write param 0: %d!\n", ret);
 		return UPCALL;

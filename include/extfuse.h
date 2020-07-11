@@ -2,10 +2,10 @@
 #define __EXTFUSE_H__
 
 #include <linux/fuse.h>
-#include <uapi/linux/extfuse.h>
-#include <extfuse_i.h>
+#include <linux/extfuse.h>
 
-typedef struct extfuse_req *extfuse_req_t;
+/* This is taken from Linux source */
+#include <extfuse_i.h>
 
 #define FUSE_LOOKUP   	   1
 #define FUSE_FORGET   	   2

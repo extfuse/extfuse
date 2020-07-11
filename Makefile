@@ -1,3 +1,7 @@
+#
+# Based on linux/samples/bpf/Makefile
+#
+
 # kbuild trick to avoid linker error. Can be omitted if a module is built.
 obj- := dummy.o
 
@@ -21,12 +25,31 @@ always := $(hostprogs-y)
 always += bpf/extfuse.o
 
 EXTRA_CFLAGS += -I$(PWD)/include -I$(objtree)/samples/bpf
+ifneq ("$(wildcard $(srctree)/samples/bpf/asm_goto_workaround.h)","")
+	EXTRA_CFLAGS += -I$(srctree)/samples/bpf/ -include asm_goto_workaround.h
+endif
 
-HOSTCFLAGS += -fPIC -I$(objtree)/usr/include -I$(PWD)/include
-HOSTCFLAGS += -I$(objtree)/samples/bpf -I$(objtree)/tools/lib -I$(objtree)/tools/lib/bpf
+ifdef HOSTCFLAGS
+HOSTCFLAGS += -fPIC -I$(PWD)/include
+HOSTCFLAGS += -I$(objtree)/usr/include
+HOSTCFLAGS += -I$(objtree)/samples/bpf
+HOSTCFLAGS += -I$(objtree)/tools/lib/bpf
+HOSTCFLAGS += -I$(objtree)/tools/lib -I$(srctree)/tools/include
+HOSTCFLAGS += -I$(srctree)/tools/perf
+HOSTLOADLIBES_libextfuse += -shared -lelf -lpthread
+else
+KBUILD_HOSTCFLAGS += -fPIC -I$(PWD)/include
+KBUILD_HOSTCFLAGS += -I$(objtree)/usr/include
+KBUILD_HOSTCFLAGS += -I$(srctree)/samples/bpf
+KBUILD_HOSTCFLAGS += -I$(srctree)/tools/lib/bpf
+KBUILD_HOSTCFLAGS += -I$(srctree)/tools/testing/selftests/bpf/
+KBUILD_HOSTCFLAGS += -I$(srctree)/tools/lib -I$(srctree)/tools/include
+KBUILD_HOSTCFLAGS += -I$(srctree)/tools/perf
+HOSTLDLIBS_libextfuse += -shared -lelf -lpthread
+endif
+
 HOSTCFLAGS_bpf_load.o += -I$(objtree)/usr/include -Wno-unused-variable
 HOSTCFLAGS_libbpf.o += -I$(objtree)/usr/include -Wno-unused-variable
-HOSTLOADLIBES_libextfuse += -shared -lelf -lpthread
 
 # Allows pointing LLC/CLANG to a LLVM backend with bpf support, redefine on cmdline:
 #  make samples/bpf/ LLC=~/git/llvm/build/bin/llc CLANG=~/git/llvm/build/bin/clang
@@ -35,12 +58,11 @@ CLANG ?= clang
 
 # Trick to allow make to be run from this directory
 all:
-	$(MAKE) -C /lib/modules/`uname -r`/build $$PWD/
+	$(MAKE) -C /lib/modules/`uname -r`/build M=${PWD}
 
 clean:
-	$(MAKE) -C /lib/modules/`uname -r`/build M=$$PWD clean
+	$(MAKE) -C /lib/modules/`uname -r`/build M=${PWD} clean
 	rm -f src/*.o xdp/*.o *.a *.so extfuse
-	rm -f include/bpf_helpers.h include/bpf_load.h include/libbpf.h
 	rm -f src/libbpf.c src/bpf_load.c
 
 # Verify LLVM compiler tools are available and bpf target is supported by llc
@@ -68,6 +90,10 @@ $(src)/*.c: verify_target_bpf
 # useless for BPF samples.
 $(obj)/%.o: $(src)/%.c
 	$(CLANG) $(NOSTDINC_FLAGS) $(LINUXINCLUDE) $(EXTRA_CFLAGS) \
-		-D__KERNEL__ -D__ASM_SYSREG_H -Wno-unused-value -Wno-pointer-sign \
-		-Wno-compare-distinct-pointer-types \
-		-O2 -emit-llvm -c $< -o -| $(LLC) -march=bpf -filetype=obj -o $@
+		-I$(srctree)/tools/testing/selftests/bpf/ -I$(srctree)/fs/fuse/ \
+		-D__KERNEL__ -D__BPF_TRACING__ -Wno-unused-value -Wno-pointer-sign \
+		-D__TARGET_ARCH_$(ARCH) -Wno-compare-distinct-pointer-types \
+		-Wno-gnu-variable-sized-type-not-at-end \
+		-Wno-address-of-packed-member -Wno-tautological-compare \
+		-Wno-unknown-warning-option $(CLANG_ARCH_ARGS) \
+		-O2 -emit-llvm -c $< -o -| $(LLC) -march=bpf $(LLC_FLAGS) -filetype=obj -o $@

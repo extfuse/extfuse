@@ -1,8 +1,6 @@
 #ifndef __EBPF_LOOKUP_H__
 #define __EBPF_LOOKUP_H__
 
-#include <extfuse.h>
-
 typedef struct lookup_entry_key {
     /* parent node id */
     uint64_t nodeid;

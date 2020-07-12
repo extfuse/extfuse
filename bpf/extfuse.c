@@ -11,6 +11,8 @@
 #include <linux/fs_stack.h>
 
 #include <ebpf.h>
+#include <extfuse.h>
+
 #include "lookup.h"
 #include "attr.h"
 

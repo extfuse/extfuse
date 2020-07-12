@@ -6,9 +6,9 @@
 obj- := dummy.o
 
 # List of programs to build
-hostprogs-y := libextfuse
+hostprogs-y := libextfuse.so
 
-libextfuse-objs := \
+libextfuse.so-objs := \
 	src/ebpf.o src/libbpf.o src/bpf_load.o
 
 # Generate .c files based on kernel source
@@ -36,7 +36,7 @@ HOSTCFLAGS += -I$(objtree)/samples/bpf
 HOSTCFLAGS += -I$(objtree)/tools/lib/bpf
 HOSTCFLAGS += -I$(objtree)/tools/lib -I$(srctree)/tools/include
 HOSTCFLAGS += -I$(srctree)/tools/perf
-HOSTLOADLIBES_libextfuse += -shared -lelf -lpthread
+HOSTLOADLIBES_libextfuse.so += -shared -lelf -lpthread
 else
 KBUILD_HOSTCFLAGS += -fPIC -I$(PWD)/include
 KBUILD_HOSTCFLAGS += -I$(objtree)/usr/include
@@ -45,7 +45,7 @@ KBUILD_HOSTCFLAGS += -I$(srctree)/tools/lib/bpf
 KBUILD_HOSTCFLAGS += -I$(srctree)/tools/testing/selftests/bpf/
 KBUILD_HOSTCFLAGS += -I$(srctree)/tools/lib -I$(srctree)/tools/include
 KBUILD_HOSTCFLAGS += -I$(srctree)/tools/perf
-HOSTLDLIBS_libextfuse += -shared -lelf -lpthread
+HOSTLDLIBS_libextfuse.so += -shared -lelf -lpthread
 endif
 
 HOSTCFLAGS_bpf_load.o += -I$(objtree)/usr/include -Wno-unused-variable
@@ -62,7 +62,7 @@ all:
 
 clean:
 	$(MAKE) -C /lib/modules/`uname -r`/build M=${PWD} clean
-	rm -f src/*.o xdp/*.o *.a *.so extfuse
+	rm -f src/*.o bpf/*.o *.so
 	rm -f src/libbpf.c src/bpf_load.c
 
 # Verify LLVM compiler tools are available and bpf target is supported by llc

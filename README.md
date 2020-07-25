@@ -12,13 +12,15 @@ $ make menuconfig
 	[*]   Extension framework for FUSE
 $ make -j4
 $ sudo make install -j4
+$ make headers_install
 ```
 In menuconfig step, **DO NOT** select FUSE as a kernel module as it will cause the kernel compilation to fail; instead, build FUSE into the kernel.
 
-Boot into the new kernel. Clone ExtFUSE library sources and build. You will need LLVM/Clang toolchain.
+Boot into the new kernel. Clone ExtFUSE library sources and build. Export the path to repo as EXTFUSE_REPO_PATH. You will need LLVM/Clang toolchain to build.
 ```
 $ git clone https://github.com/extfuse/extfuse
 $ cd extfuse
+$ export EXTFUSE_REPO_PATH=$(pwd)
 $ LLC=llc-3.8 CLANG=clang-3.8 make
 ```
 
@@ -29,13 +31,14 @@ Finally, you will also need a modified FUSE library. To clone its source repo:
 ```
 $ git clone --branch ExtFUSE-1.0 https://github.com/extfuse/libfuse
 ```
-Follow instructions [here](https://github.com/libfuse/libfuse/blob/master/README.md) to build libfuse.
+Follow instructions [here](https://github.com/libfuse/libfuse/blob/fuse_3_0_bugfix/README.md) to build libfuse. **NOTE** that you will need to run ```./makeconf.sh``` to create the ```configure``` script.
 
-You can test ExtFUSE functionality with a simple stackable FUSE file system [here](https://github.com/ashishbijlani/StackFS).
+You can test ExtFUSE functionality with a simple stackable FUSE file system [here](https://github.com/ashishbijlani/StackFS). **NOTE** that you will need to copy ```$EXTFUSE_REPO_PATH/src/extfuse.o``` to ```/tmp``` before you test StackFS because the name and path is hard-coded in ```StackFS_LL.c```.
 ```
 $ git clone https://github.com/ashishbijlani/StackFS
 $ cd StackFS
 $ make
+$ cp $EXTFUSE_REPO_PATH/src/extfuse.o /tmp/.
 $ export LIB_PATH=$HOME/libfuse/lib/.libs:$HOME/extfuse
 $ sudo sh -c "LD_LIBRARY_PATH=$LIB_PATH ./StackFS_ll -o max_write=131072 -o writeback_cache -o splice_read -o splice_write -o splice_move -r $ROOT_DIR $MNT_DIR -o allow_other"
 ```

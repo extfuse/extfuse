@@ -35,7 +35,7 @@
                 })
 #endif
 
-#define HANDLER(F) SEC("fuse/"__stringify(F)) int bpf_func_##F
+#define HANDLER(F) SEC("extfuse/"__stringify(F)) int bpf_func_##F
 
 /*
 	BPF_MAP_TYPE_PERCPU_HASH: each CPU core gets its own hash-table.
@@ -66,7 +66,7 @@ struct bpf_map_def SEC("maps") handlers = {
    .max_entries = FUSE_OPS_COUNT << 1,
 };
 
-int SEC("fuse") fuse_xdp_main_handler(void *ctx)
+int SEC("extfuse") fuse_xdp_main_handler(void *ctx)
 {
     struct extfuse_req *args = (struct extfuse_req *)ctx;
     int opcode = (int)args->in.h.opcode;

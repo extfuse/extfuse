@@ -73,13 +73,8 @@ int SEC("extfuse") fuse_xdp_main_handler(void *ctx)
 
     PRINTK("Opcode %d\n", opcode);
 
-	if (opcode > 0) {
-		bpf_tail_call(ctx, &handlers, opcode+FUSE_OPS_COUNT);
-		return RETURN;
-	} else {
-		bpf_tail_call(ctx, &handlers, -opcode);
-		return UPCALL;
-	}
+	bpf_tail_call(ctx, &handlers, opcode);
+	return UPCALL;
 }
 
 static int gen_entry_key(void *ctx, int param, const char *op, lookup_entry_key_t *key)

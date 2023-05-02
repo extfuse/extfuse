@@ -1,5 +1,7 @@
 # Extension Framework for FUSE
 
+> **Note** for consulting/customization, please reach out to the [author](https://github.com/ashishbijlani).
+
 We have modifed the FUSE driver to support ExtFUSE feature. Therefore, you will have to install and run a our modified kernel. To clone the kernel sources do:
 ```
 $ git clone --branch ExtFUSE-1.0 https://github.com/extfuse/linux 
